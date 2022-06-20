@@ -1,0 +1,42 @@
+spring:
+  application:
+    name: multi.binding.app
+  cloud:
+    function:
+      definition: kafkaEventProcessor
+    stream:
+      bindings:
+        kafkaEventProcessor-in-0:
+          destination: myKafkaIn.topic
+          binder: sourcekafka
+        kafkaEventProcessor-out-1:
+          destination: myKafkaOut.topic
+          binder: destkafka
+      defaultBinder: destkafka
+      kafka:
+        binder:
+          brokers: "localhost:19092"
+          configuration.security.protocol: PLAINTEXT
+      binders:
+        destkafka:
+          type: kstream
+          environment:
+            spring.cloud.stream.kafka.streams.binder:
+              brokers: "localhost:19092"
+              configuration.security.protocol: PLAINTEXT
+        sourcekafka:
+          type: kstream
+          environment:
+            spring.cloud.stream.kafka.streams.binder:
+            brokers: broker-1:9001,broker-2:9002,broker-3:9003
+            jaas:
+              loginModule: org.apache.kafka.common.security.scram.ScramLoginModule
+              options:
+                username: ${KAFKA_CONSUMER_USER}
+                password: ${KAFKA_CONSUMER_PASSWORD}
+            configuration:
+              security.protocol: SASL_SSL
+              sasl.mechanism: SCRAM-SHA-512
+              commit.interval.ms: 100
+              default.key.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+              default.value.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
